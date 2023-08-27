@@ -2,7 +2,7 @@ namespace MCServerWebManagerBackend.Data.Models;
 
 public struct MessageContainer<T>
 {
-    public T? ReturnData { get; set; }
+    public T? Data { get; set; }
 
     public string? Message { get; set; }
 

@@ -4,6 +4,8 @@
         <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,7 +19,10 @@
     <ItemGroup>
       <ProjectReference Include="..\MCServerWebManagerBackend.Data\MCServerWebManagerBackend.Data.csproj" />
       <ProjectReference Include="..\MCServerWebManagerBackend.Socket\MCServerWebManagerBackend.Socket.csproj" />
+
     </ItemGroup>
+
+
 
 
 </Project>
