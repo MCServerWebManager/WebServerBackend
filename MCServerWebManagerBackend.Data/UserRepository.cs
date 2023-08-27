@@ -68,7 +68,7 @@ public class UserRepository : IUserRepository
         
         ret.Data = token.TokenStr;
         ret.Success = true;
-        _logger.LogInformation($"用户: {user.UserName} 登录成功, 登录Token: {ret.Data}");
+        _logger.LogDebug($"用户: {user.UserName} 登录成功");
         
         return ret;
     }

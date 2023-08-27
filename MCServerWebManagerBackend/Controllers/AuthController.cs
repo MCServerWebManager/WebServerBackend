@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace MCServerWebManagerBackend.Controllers;
 
 [ApiController]
-public class LoginController
+public class AuthController
 {
-    private readonly ILogger<LoginController> _logger;
+    private readonly ILogger<AuthController> _logger;
     private readonly IUserRepository _repo;
     
-    public LoginController(ILogger<LoginController> logger, IUserRepository repo)
+    public AuthController(ILogger<AuthController> logger, IUserRepository repo)
     {
         _logger = logger;
         _repo = repo;
