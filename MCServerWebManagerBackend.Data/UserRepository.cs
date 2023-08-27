@@ -7,14 +7,27 @@ namespace MCServerWebManagerBackend.Data;
 
 public interface IUserRepository
 {
+    /// <summary>
+    /// 用户登录
+    /// </summary>
+    /// <param name="username">用户名</param>
+    /// <param name="password">密码</param>
+    /// <returns>如成功则返回用户token</returns>
     public Task<MessageContainer<string>> Login(string username, string password);
+
+    /// <summary>
+    /// 通过用户Token来获取用户信息
+    /// </summary>
+    /// <param name="token">用户token</param>
+    /// <param name="expireTime">token有效时长，单位为秒。默认为-1(无限制)，</param>
+    /// <returns>如成功则返回用户信息</returns>
+    public Task<MessageContainer<User>> GetUserFromToken(string token, long expireTime = -1);
 }
 
 public class UserRepository : IUserRepository
 {
     private readonly IContext _context;
     private readonly ILogger<UserRepository> _logger;
-    
     public UserRepository(IContext context, ILogger<UserRepository> logger)
     {
         _context = context;
@@ -48,14 +61,65 @@ public class UserRepository : IUserRepository
             User = user.Id,
             TokenStr = Extensions.GenerateToken()
         };
-        ret.ReturnData = token.TokenStr;
 
-        //写入sqlite
+        //写入sqlite 并返回token
         await _context.Tokens.AddAsync(token);
         await _context.Ctx.SaveChangesAsync();
         
-        _logger.LogInformation($"用户: {user.UserName} 登录成功, 登录Token: {ret.ReturnData}");
+        ret.Data = token.TokenStr;
+        ret.Success = true;
+        _logger.LogInformation($"用户: {user.UserName} 登录成功, 登录Token: {ret.Data}");
         
         return ret;
+    }
+
+    public async Task<MessageContainer<User>> GetUserFromToken(string token, long expireTime = -1)
+    {
+        var userInfo = await (
+            from tokenRec in _context.Tokens
+            join userRec in _context.Users
+            on tokenRec.User equals userRec.Id
+            where tokenRec.TokenStr == token
+            select new
+            {
+                CreatedAt = tokenRec.CreatedAt,
+                UserName = userRec.UserName,
+                Password = userRec.Password,
+                UserId = userRec.Id
+            }
+        ).FirstOrDefaultAsync();
+
+        
+        //没找到对应的User
+        if (userInfo is null)
+        {
+            return new MessageContainer<User>()
+            {
+                Message = "Token不正确",
+                Data = null,
+                Success = false
+            };
+        }
+
+        
+        var user = new User() { Id = userInfo.UserId, UserName = userInfo.UserName, Password = userInfo.Password };
+        
+        //Token过期
+        if ((expireTime != -1) && userInfo.CreatedAt.AddSeconds(expireTime) < DateTime.Now)
+        {
+            return new MessageContainer<User>()
+            {
+                Message = "Token已过期",
+                Data = null,
+                Success = false
+            };
+        }
+
+        
+        return new MessageContainer<User>()
+        {
+            Success = true,
+            Data = user
+        };
     }
 }
